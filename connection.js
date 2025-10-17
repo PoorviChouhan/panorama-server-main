@@ -7,8 +7,7 @@ app.post('/create-employee-table', async (req, res) => {
       id SERIAL PRIMARY KEY,
       name VARCHAR(100) NOT NULL,
       position VARCHAR(50),
-      salary NUMERIC(10, 2),
-      hire_date DATE DEFAULT CURRENT_DATE
+      working_on VARCHAR(50)
     );
   `;
   try {
@@ -21,13 +20,13 @@ app.post('/create-employee-table', async (req, res) => {
 
 // ✅ Endpoint to add employee data
 app.post('/add-employee', async (req, res) => {
-  const { name, position, salary } = req.body;
+  const { name, position, working_on } = req.body;
   const insertQuery = `
-    INSERT INTO employee (name, position, salary)
+    INSERT INTO employee (name, position, working_on)
     VALUES ($1, $2, $3) RETURNING *;
   `;
   try {
-    const result = await pool.query(insertQuery, [name, position, salary]);
+    const result = await pool.query(insertQuery, [name, position, working_on]);
     res.status(201).json(result.rows[0]);
   } catch (error) {
     res.status(500).send('❌ Error inserting employee: ' + error.message);
