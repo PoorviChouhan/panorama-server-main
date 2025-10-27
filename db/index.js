@@ -101,11 +101,44 @@ const empSchema = new mongoose.Schema({
   empEmail: { type: String, required: true },
   address: { type: String },
 });
+// Client Schema with nested address
+const clientSchema = new mongoose.Schema({
+  clientName: { type: String, required: true, trim: true },
+  clientAddress: {
+    address: { type: String, required: true, trim: true },
+    state: { type: String, required: true, trim: true },
+    pinCode: {
+      type: String,
+      required: true,
+      validate: {
+        validator: function (v) {
+          return /^[0-9]{6}$/.test(v); // 6-digit PIN code
+        },
+        message: (props) =>
+          `${props.value} is not a valid PIN code! Must be 6 digits.`,
+      },
+    },
+  },
+  gstNumber: {
+    type: String,
+    required: true,
+    validate: {
+      validator: function (v) {
+        return /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/.test(
+          v
+        ); // GST format validation
+      },
+      message: (props) => `${props.value} is not a valid GST number format!`,
+    },
+  },
+});
+
 const Admin = mongoose.model('Admin', adminSchema);
 const Laptops = mongoose.model('Laptops', laptopSchema);
 const Employee = mongoose.model('Employee', empSchema);
+const Client = mongoose.model('Client', clientSchema);
 // const History = mongoose.model("History", laptopHistory);
 
-export { Laptops, Admin, Employee };
+export { Laptops, Admin, Employee, Client };
 
 // history :- laptop history - username, userId, accessories, date
