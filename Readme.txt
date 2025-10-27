@@ -2,7 +2,6 @@ for invoice
 1.created Database at neondb.
 2.Installed pg dependency and Connected Neon to project using connection string
 3.Created CRUD API's (Controller and router) for client,employee and projects table
-4.
 
 
 Swagger
