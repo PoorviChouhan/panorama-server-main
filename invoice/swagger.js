@@ -5,9 +5,9 @@ const options = {
   definition: {
     openapi: "3.0.0",
     info: {
-      title: "Panorama Invoice API",
+      title: "Panorama API Documentation",
       version: "1.0.0",
-      description: "API documentation for Clients, Projects and Employees",
+      description: "Combined API documentation for Invoice + PostgreSQL modules",
     },
     servers: [
       {
@@ -15,7 +15,10 @@ const options = {
       },
     ],
   },
-  apis: ["./routes/*.js"],
+  apis: [
+    "./routes/*.js",           // PostgreSQL routes in root
+    "./invoice/routes/*.js",   // Invoice module routes
+  ],
 };
 
 export const swaggerSpec = swaggerJsdoc(options);

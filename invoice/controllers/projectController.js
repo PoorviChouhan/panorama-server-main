@@ -1,4 +1,4 @@
-import pool from "../connection.js";
+import pool from "../../connection.js";
 
 // CREATE project
 export const createProject = async (req, res) => {

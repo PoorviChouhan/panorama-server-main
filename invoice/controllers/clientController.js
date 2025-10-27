@@ -1,8 +1,9 @@
-import pool from "../connection.js";
+import pool from "../../connection.js";
 
 // CREATE client
 export const createClient = async (req, res) => {
   const { name, address, state, gst_number } = req.body;
+  console.log("createClient");
   try {
     const result = await pool.query(
       `INSERT INTO clients (name, address, state, gst_number) 
