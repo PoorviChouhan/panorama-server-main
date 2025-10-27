@@ -1,40 +1,6 @@
-import { pool, app } from './app.js';
+import { pool } from '../app.js';
 
-// ✅ Endpoint to create employee table
-app.post('/create-employee-table', async (req, res) => {
-  const createTableQuery = `
-    CREATE TABLE IF NOT EXISTS employee (
-      id SERIAL PRIMARY KEY,
-      name VARCHAR(100) NOT NULL,
-      position VARCHAR(50),
-      working_on VARCHAR(50)
-    );
-  `;
-  try {
-    await pool.query(createTableQuery);
-    res.status(200).send('✅ Employee table created or already exists.');
-  } catch (error) {
-    res.status(500).send('❌ Error creating table: ' + error.message);
-  }
-});
-
-// ✅ Endpoint to add employee data
-app.post('/add-employee', async (req, res) => {
-  const { name, position, working_on } = req.body;
-  const insertQuery = `
-    INSERT INTO employee (name, position, working_on)
-    VALUES ($1, $2, $3) RETURNING *;
-  `;
-  try {
-    const result = await pool.query(insertQuery, [name, position, working_on]);
-    res.status(201).json(result.rows[0]);
-  } catch (error) {
-    res.status(500).send('❌ Error inserting employee: ' + error.message);
-  }
-});
-
-// ✅ Endpoint to create client table
-app.post('/create-client-table', async (req, res) => {
+async function createClientTable(req, res) {
   const createTableQuery = `
     CREATE TABLE IF NOT EXISTS client (
       id SERIAL PRIMARY KEY,
@@ -53,10 +19,9 @@ app.post('/create-client-table', async (req, res) => {
   } catch (error) {
     res.status(500).send('❌ Error creating client table: ' + error.message);
   }
-});
+}
 
-// ✅ Endpoint to add client data
-app.post('/add-client', async (req, res) => {
+async function createClient(req, res) {
   const {
     client_name,
     client_address,
@@ -80,10 +45,9 @@ app.post('/add-client', async (req, res) => {
   } catch (error) {
     res.status(500).send('❌ Error inserting client: ' + error.message);
   }
-});
+}
 
-// ✅ Endpoint to get all clients
-app.get('/clients', async (req, res) => {
+async function listClients(req, res) {
   const selectQuery = `SELECT * FROM client ORDER BY client_name ASC;`;
   try {
     const result = await pool.query(selectQuery);
@@ -91,10 +55,9 @@ app.get('/clients', async (req, res) => {
   } catch (error) {
     res.status(500).send('❌ Error fetching clients: ' + error.message);
   }
-});
+}
 
-// ✅ Endpoint to get client by ID
-app.get('/clients/:id', async (req, res) => {
+async function getClientById(req, res) {
   const { id } = req.params;
   const selectQuery = `SELECT * FROM client WHERE id = $1;`;
   try {
@@ -106,10 +69,9 @@ app.get('/clients/:id', async (req, res) => {
   } catch (error) {
     res.status(500).send('❌ Error fetching client: ' + error.message);
   }
-});
+}
 
-// ✅ Endpoint to update client by ID
-app.put('/clients/:id', async (req, res) => {
+async function updateClientById(req, res) {
   const { id } = req.params;
   const {
     client_name,
@@ -119,7 +81,6 @@ app.put('/clients/:id', async (req, res) => {
     gst_number,
   } = req.body;
 
-  // Build dynamic update query based on provided fields
   const updateFields = [];
   const values = [];
   let paramCount = 1;
@@ -173,10 +134,9 @@ app.put('/clients/:id', async (req, res) => {
   } catch (error) {
     res.status(500).send('❌ Error updating client: ' + error.message);
   }
-});
+}
 
-// ✅ Endpoint to delete client by ID
-app.delete('/clients/:id', async (req, res) => {
+async function deleteClientById(req, res) {
   const { id } = req.params;
   const deleteQuery = `DELETE FROM client WHERE id = $1 RETURNING *;`;
   try {
@@ -191,10 +151,13 @@ app.delete('/clients/:id', async (req, res) => {
   } catch (error) {
     res.status(500).send('❌ Error deleting client: ' + error.message);
   }
-});
+}
 
-// ✅ Start the Express server
-const PORT = 3000;
-app.listen(PORT, () => {
-  console.log(`🚀 Server running at http://localhost:${PORT}`);
-});
+export {
+  createClientTable,
+  createClient,
+  listClients,
+  getClientById,
+  updateClientById,
+  deleteClientById,
+};
