@@ -10,7 +10,7 @@ const router = Router();
  * @access public
  */
 
-// router.post("/adminLogin", createAdmin);
+// router.post("/adminLogin", createAdmin); t
 
 
 /**
