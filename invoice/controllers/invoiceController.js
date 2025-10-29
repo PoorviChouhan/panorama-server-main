@@ -12,13 +12,13 @@ export const createInvoice = async (req, res) => {
       return res.status(400).json({ message: "Invoice No and Project ID are required" });
     }
 
-    // 🔹 Fetch related info via project → client → company
+    // 🔹 Fetch related info via project → client → company → employee
     const projectData = await pool.query(
       `SELECT 
           p.id AS project_id,
-          p.emp_id,
           c.id AS client_id,
-          c.company_id
+          c.company_id,
+          c.emp_id
        FROM projects p
        JOIN clients c ON p.client_id = c.id
        WHERE p.id = $1`,
@@ -31,7 +31,7 @@ export const createInvoice = async (req, res) => {
 
     const { client_id, company_id, emp_id } = projectData.rows[0];
 
-    // 🔹 Insert into invoices
+    // 🔹 Insert invoice using fetched relations
     const result = await pool.query(
       `INSERT INTO invoices 
         (invoice_no, project_id, issue_date, tax_rate, total_amount)
@@ -55,9 +55,7 @@ export const createInvoice = async (req, res) => {
   }
 };
 
-/* ============================================================
-   ✅ GET ALL INVOICES (with joined project, client, company, employee info)
-   ============================================================ */
+// ✅ Get All Invoices (with project → client → company → employee info)
 export const getAllInvoices = async (req, res) => {
   try {
     const result = await pool.query(
@@ -71,10 +69,9 @@ export const getAllInvoices = async (req, res) => {
        LEFT JOIN projects p ON i.project_id = p.id
        LEFT JOIN clients c ON p.client_id = c.id
        LEFT JOIN companies co ON c.company_id = co.id
-       LEFT JOIN employee e ON p.emp_id = e.id
+       LEFT JOIN employee e ON c.emp_id = e.id
        ORDER BY i.id DESC`
     );
-
     res.status(200).json(result.rows);
   } catch (err) {
     console.error("❌ Error fetching invoices:", err.message);
@@ -82,13 +79,10 @@ export const getAllInvoices = async (req, res) => {
   }
 };
 
-/* ============================================================
-   ✅ GET SINGLE INVOICE BY ID
-   ============================================================ */
+// ✅ Get Invoice by ID
 export const getInvoiceById = async (req, res) => {
   try {
     const { id } = req.params;
-
     const result = await pool.query(
       `SELECT 
           i.*,
@@ -115,9 +109,7 @@ export const getInvoiceById = async (req, res) => {
   }
 };
 
-/* ============================================================
-   ✅ UPDATE INVOICE
-   ============================================================ */
+// ✅ Update Invoice
 export const updateInvoice = async (req, res) => {
   try {
     const { id } = req.params;
@@ -145,17 +137,11 @@ export const updateInvoice = async (req, res) => {
   }
 };
 
-/* ============================================================
-   ✅ DELETE INVOICE
-   ============================================================ */
+// ✅ Delete Invoice
 export const deleteInvoice = async (req, res) => {
   try {
     const { id } = req.params;
-
-    const result = await pool.query(
-      "DELETE FROM invoices WHERE id = $1 RETURNING *",
-      [id]
-    );
+    const result = await pool.query("DELETE FROM invoices WHERE id = $1 RETURNING *", [id]);
 
     if (result.rows.length === 0)
       return res.status(404).json({ message: "Invoice not found" });
