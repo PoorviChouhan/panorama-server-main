@@ -12,7 +12,8 @@ export const createProject = async (req, res) => {
     const result = await pool.query(
       `INSERT INTO projects 
        (name, client_id, emp_id, billing_amt, days, leaves, active)
-       VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
+       RETURNING *`,
       [
         name,
         client_id,
@@ -20,7 +21,7 @@ export const createProject = async (req, res) => {
         billing_amt || 0,
         days || 0,
         leaves || 0,
-        active !== undefined ? active : true
+        active !== undefined ? active : true,
       ]
     );
 
@@ -28,9 +29,19 @@ export const createProject = async (req, res) => {
       message: "✅ Project created successfully",
       project: result.rows[0],
     });
+
   } catch (err) {
     console.error("❌ Error in createProject:", err);
-    res.status(500).send("Server Error");
+
+    // Handle PostgreSQL foreign key violation
+    if (err.code === "23503") {
+      // 23503 = foreign_key_violation
+      return res.status(400).json({
+        message: "Invalid client_id or emp_id — referenced record not found",
+      });
+    }
+
+    res.status(500).json({ message: "Server Error" });
   }
 };
 

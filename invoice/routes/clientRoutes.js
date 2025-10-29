@@ -13,7 +13,7 @@ const router = express.Router();
  * @swagger
  * tags:
  *   name: Clients
- *   description: Client management APIs
+ *   description: APIs for managing clients
  */
 
 /**
@@ -34,15 +34,25 @@ const router = express.Router();
  *         application/json:
  *           schema:
  *             type: object
+ *             required:
+ *               - name
+ *               - company_id
  *             properties:
  *               name:
  *                 type: string
+ *                 example: "Acme Corporation"
  *               address:
  *                 type: string
+ *                 example: "123 Main Street, New York"
  *               state:
  *                 type: string
+ *                 example: "NY"
  *               gst_number:
  *                 type: string
+ *                 example: "GST123456"
+ *               company_id:
+ *                 type: integer
+ *                 example: 1
  *     responses:
  *       201:
  *         description: Client created successfully
@@ -60,10 +70,10 @@ const router = express.Router();
  *         schema:
  *           type: integer
  *         required: true
- *         description: ID of the client to retrieve
+ *         description: ID of the client
  *     responses:
  *       200:
- *         description: Client details fetched successfully
+ *         description: Client fetched successfully
  *       404:
  *         description: Client not found
  *   put:
@@ -85,12 +95,19 @@ const router = express.Router();
  *             properties:
  *               name:
  *                 type: string
+ *                 example: "Panorama Software Solutions"
  *               address:
  *                 type: string
+ *                 example: "456 Elm Street, Mumbai"
  *               state:
  *                 type: string
+ *                 example: "MH"
  *               gst_number:
  *                 type: string
+ *                 example: "GST987654"
+ *               company_id:
+ *                 type: integer
+ *                 example: 2
  *     responses:
  *       200:
  *         description: Client updated successfully
