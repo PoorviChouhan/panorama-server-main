@@ -2,7 +2,7 @@ import pool from "../../connection.js";
 
 // ✅ CREATE Employee
 export const createEmployee = async (req, res) => {
-  const { name, position, working_on } = req.body;
+  const { name, position, working_on, emp_code } = req.body;
 
   if (!name) {
     return res.status(400).json({ message: "Name is required" });
@@ -10,9 +10,9 @@ export const createEmployee = async (req, res) => {
 
   try {
     const result = await pool.query(
-      `INSERT INTO employee (name, position, working_on)
-       VALUES ($1, $2, $3) RETURNING *`,
-      [name, position || null, working_on || null]
+      `INSERT INTO employee (name, position, working_on, emp_code)
+       VALUES ($1, $2, $3, $4) RETURNING *`,
+      [name, position || null, working_on || null, emp_code]
     );
 
     res.status(201).json({
@@ -54,14 +54,14 @@ export const getEmployeeById = async (req, res) => {
 // ✅ UPDATE Employee
 export const updateEmployee = async (req, res) => {
   const { id } = req.params;
-  const { name, position, working_on } = req.body;
+  const { name, position, working_on, emp_code } = req.body;
 
   try {
     const result = await pool.query(
       `UPDATE employee
-       SET name=$1, position=$2, working_on=$3
-       WHERE id=$4 RETURNING *`,
-      [name, position, working_on, id]
+       SET name=$1, position=$2, working_on=$3, emp_code=$4
+       WHERE id=$5 RETURNING *`,
+      [name, position, working_on, emp_code, id]
     );
 
     if (result.rows.length === 0) {

@@ -10,6 +10,7 @@ import { router as pgClients } from "./routes/pgClients.js";
 import clientRoutes from "./invoice/routes/clientRoutes.js";
 import projectRoutes from "./invoice/routes/projectRoutes.js";
 import employeeRouter from "./invoice/routes/employeeRoutes.js";
+import invoiceRoutes from "./invoice/routes/invoiceRoutes.js";
 
 // ===== Swagger setup (from invoice module) =====
 import { swaggerUi, swaggerSpec } from "./invoice/swagger.js";
@@ -31,6 +32,7 @@ app.use("/api/pg/clients", pgClients);
 app.use("/api/clients", clientRoutes);
 app.use("/api/projects", projectRoutes);
 app.use("/api/employee", employeeRouter);
+app.use("/api/invoices", invoiceRoutes);
 
 // ===== Swagger Docs =====
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
