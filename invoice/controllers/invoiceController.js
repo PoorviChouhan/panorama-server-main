@@ -1,6 +1,9 @@
 import pool from "../../connection.js";
 
-// ✅ Create Invoice (auto-fetch client, company & employee from project)
+/* ============================================================
+   ✅ CREATE INVOICE 
+   Auto-fetch client_id, company_id, and emp_id via project link
+   ============================================================ */
 export const createInvoice = async (req, res) => {
   try {
     const { invoice_no, project_id, issue_date, tax_rate, total_amount } = req.body;
@@ -66,7 +69,7 @@ export const getAllInvoices = async (req, res) => {
        LEFT JOIN projects p ON i.project_id = p.id
        LEFT JOIN clients c ON p.client_id = c.id
        LEFT JOIN companies co ON c.company_id = co.id
-       LEFT JOIN employees e ON c.emp_id = e.id
+       LEFT JOIN employee e ON c.emp_id = e.id
        ORDER BY i.id DESC`
     );
     res.status(200).json(result.rows);
@@ -91,7 +94,7 @@ export const getInvoiceById = async (req, res) => {
        LEFT JOIN projects p ON i.project_id = p.id
        LEFT JOIN clients c ON p.client_id = c.id
        LEFT JOIN companies co ON c.company_id = co.id
-       LEFT JOIN employees e ON c.emp_id = e.id
+       LEFT JOIN employee e ON p.emp_id = e.id
        WHERE i.id = $1`,
       [id]
     );
@@ -143,7 +146,7 @@ export const deleteInvoice = async (req, res) => {
     if (result.rows.length === 0)
       return res.status(404).json({ message: "Invoice not found" });
 
-    res.status(200).json({ message: "🗑️ Invoice deleted successfully" });
+    res.status(200).json({ message: "Invoice deleted successfully" });
   } catch (err) {
     console.error("❌ Error deleting invoice:", err.message);
     res.status(500).send("Server Error");
