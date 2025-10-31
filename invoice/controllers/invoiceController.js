@@ -6,10 +6,10 @@ import pool from "../../connection.js";
    ============================================================ */
 export const createInvoice = async (req, res) => {
   try {
-    const { invoice_no, project_id, issue_date, tax_rate, total_amount } = req.body;
+    const { invoice_no, project_id, issue_date, total_amount, days, paid_leaves, unpaid_leaves, over_time } = req.body;
 
     if (!invoice_no || !project_id) {
-      return res.status(400).json({ message: "Invoice No and Project ID are required" });
+      return res.status(400).json({ message: "❌ Invoice No and Project ID are required." });
     }
 
     // 🔹 Fetch related info via project → client → company
@@ -26,7 +26,7 @@ export const createInvoice = async (req, res) => {
     );
 
     if (projectData.rows.length === 0) {
-      return res.status(404).json({ message: "Project not found or client link missing" });
+      return res.status(404).json({ message: "❌ Project not found or client link missing." });
     }
 
     const { client_id, company_id, emp_id } = projectData.rows[0];
@@ -34,10 +34,19 @@ export const createInvoice = async (req, res) => {
     // 🔹 Insert into invoices
     const result = await pool.query(
       `INSERT INTO invoices 
-        (invoice_no, project_id, issue_date, tax_rate, total_amount)
-       VALUES ($1, $2, $3, $4, $5)
+        (invoice_no, project_id, issue_date, total_amount, days, paid_leaves, unpaid_leaves, over_time)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
        RETURNING *`,
-      [invoice_no, project_id, issue_date, tax_rate, total_amount]
+      [
+        invoice_no,
+        project_id,
+        issue_date || new Date(),
+        total_amount || 0,
+        days || 0,
+        paid_leaves || 0,
+        unpaid_leaves || 0,
+        over_time || 0,
+      ]
     );
 
     res.status(201).json({
@@ -50,8 +59,21 @@ export const createInvoice = async (req, res) => {
       },
     });
   } catch (err) {
-    console.error("❌ Error creating invoice:", err.message);
-    res.status(500).send("Server Error");
+    console.error("❌ Error creating invoice:", err);
+
+    if (err.code === "23505") {
+      return res.status(400).json({ message: "❌ Duplicate invoice_no — must be unique." });
+    }
+
+    if (err.code === "23503") {
+      return res.status(400).json({ message: "❌ Invalid project_id — referenced record not found." });
+    }
+
+    if (err.code === "22P02") {
+      return res.status(400).json({ message: "❌ Invalid data type — please check your input fields." });
+    }
+
+    res.status(500).json({ message: "❌ Unexpected server error while creating invoice.", error: err.message });
   }
 };
 
@@ -75,10 +97,14 @@ export const getAllInvoices = async (req, res) => {
        ORDER BY i.id DESC`
     );
 
+    if (result.rows.length === 0) {
+      return res.status(200).json({ message: "⚠️ No invoices found.", invoices: [] });
+    }
+
     res.status(200).json(result.rows);
   } catch (err) {
-    console.error("❌ Error fetching invoices:", err.message);
-    res.status(500).send("Server Error");
+    console.error("❌ Error fetching invoices:", err);
+    res.status(500).json({ message: "❌ Failed to fetch invoices.", error: err.message });
   }
 };
 
@@ -88,6 +114,10 @@ export const getAllInvoices = async (req, res) => {
 export const getInvoiceById = async (req, res) => {
   try {
     const { id } = req.params;
+
+    if (!id || isNaN(id)) {
+      return res.status(400).json({ message: "❌ Invalid invoice ID provided." });
+    }
 
     const result = await pool.query(
       `SELECT 
@@ -106,12 +136,12 @@ export const getInvoiceById = async (req, res) => {
     );
 
     if (result.rows.length === 0)
-      return res.status(404).json({ message: "Invoice not found" });
+      return res.status(404).json({ message: "⚠️ Invoice not found." });
 
     res.status(200).json(result.rows[0]);
   } catch (err) {
-    console.error("❌ Error fetching invoice:", err.message);
-    res.status(500).send("Server Error");
+    console.error("❌ Error fetching invoice:", err);
+    res.status(500).json({ message: "❌ Failed to fetch invoice details.", error: err.message });
   }
 };
 
@@ -121,27 +151,44 @@ export const getInvoiceById = async (req, res) => {
 export const updateInvoice = async (req, res) => {
   try {
     const { id } = req.params;
-    const { invoice_no, project_id, issue_date, tax_rate, total_amount } = req.body;
+    const { invoice_no, project_id, issue_date, total_amount, days, paid_leaves, unpaid_leaves, over_time } = req.body;
+
+    if (!id || isNaN(id)) {
+      return res.status(400).json({ message: "❌ Invalid invoice ID provided." });
+    }
 
     const result = await pool.query(
       `UPDATE invoices 
-       SET invoice_no = $1, project_id = $2, issue_date = $3,
-           tax_rate = $4, total_amount = $5
-       WHERE id = $6
+       SET invoice_no = $1, project_id = $2, issue_date = $3, total_amount = $4, 
+           days = $5, paid_leaves = $6, unpaid_leaves = $7, over_time = $8
+       WHERE id = $9
        RETURNING *`,
-      [invoice_no, project_id, issue_date, tax_rate, total_amount, id]
+      [invoice_no, project_id, issue_date, total_amount, days, paid_leaves, unpaid_leaves, over_time, id]
     );
 
     if (result.rows.length === 0)
-      return res.status(404).json({ message: "Invoice not found" });
+      return res.status(404).json({ message: "⚠️ Invoice not found." });
 
     res.status(200).json({
       message: "✅ Invoice updated successfully",
       invoice: result.rows[0],
     });
   } catch (err) {
-    console.error("❌ Error updating invoice:", err.message);
-    res.status(500).send("Server Error");
+    console.error("❌ Error updating invoice:", err);
+
+    if (err.code === "23505") {
+      return res.status(400).json({ message: "❌ Duplicate invoice_no — must be unique." });
+    }
+
+    if (err.code === "23503") {
+      return res.status(400).json({ message: "❌ Invalid project_id — referenced record not found." });
+    }
+
+    if (err.code === "22P02") {
+      return res.status(400).json({ message: "❌ Invalid data type in input fields." });
+    }
+
+    res.status(500).json({ message: "❌ Unexpected error while updating invoice.", error: err.message });
   }
 };
 
@@ -152,17 +199,28 @@ export const deleteInvoice = async (req, res) => {
   try {
     const { id } = req.params;
 
+    if (!id || isNaN(id)) {
+      return res.status(400).json({ message: "❌ Invalid invoice ID provided." });
+    }
+
     const result = await pool.query(
       "DELETE FROM invoices WHERE id = $1 RETURNING *",
       [id]
     );
 
     if (result.rows.length === 0)
-      return res.status(404).json({ message: "Invoice not found" });
+      return res.status(404).json({ message: "⚠️ Invoice not found or already deleted." });
 
-    res.status(200).json({ message: "Invoice deleted successfully" });
+    res.status(200).json({ message: "✅ Invoice deleted successfully." });
   } catch (err) {
-    console.error("❌ Error deleting invoice:", err.message);
-    res.status(500).send("Server Error");
+    console.error("❌ Error deleting invoice:", err);
+
+    if (err.code === "23503") {
+      return res.status(400).json({
+        message: "❌ Cannot delete — this invoice is referenced in another table (foreign key constraint).",
+      });
+    }
+
+    res.status(500).json({ message: "❌ Unexpected error while deleting invoice.", error: err.message });
   }
 };

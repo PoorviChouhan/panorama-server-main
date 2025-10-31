@@ -4,20 +4,17 @@ import dotenv from "dotenv";
 import pkg from "pg";
 const { Pool } = pkg;
 
-// Setup __dirname for ES modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Load .env from root
 dotenv.config({ path: path.resolve(__dirname, "../.env") });
 
-// Log all env variables for verification
 console.log("🔍 Checking env variables:");
 console.log({
   host: process.env.PGHOST,
   database: process.env.PGDATABASE,
   user: process.env.PGUSER,
-  passwordType:typeof process.env.PGPASSWORD,
+  passwordType: typeof process.env.PGPASSWORD,
   port: process.env.PGPORT,
   ssl: process.env.SSL,
 });
@@ -27,8 +24,12 @@ const pool = new Pool({
   database: process.env.PGDATABASE,
   user: process.env.PGUSER,
   password: process.env.PGPASSWORD,
-  port: process.env.PGPORT,
-  ssl: process.env.SSL === "true" ? { rejectUnauthorized: false } : false,
+  port: parseInt(process.env.PGPORT || "5432", 10),
+  ssl: {
+    rejectUnauthorized: false,
+  },
+  idleTimeoutMillis: 30000, 
+  connectionTimeoutMillis: 5000,
 });
 
 pool.connect()
