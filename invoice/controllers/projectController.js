@@ -2,7 +2,7 @@ import pool from "../../connection.js";
 
 // ✅ CREATE project
 export const createProject = async (req, res) => {
-  const { name, client_id, emp_id, billing_amt, active, billing_method } = req.body;
+  const { name, client_id, emp_id, billing_amt, active, billing_method, overtime_amt } = req.body;
 
   if (!name || !client_id || !emp_id) {
     return res
@@ -13,14 +13,14 @@ export const createProject = async (req, res) => {
   // Validate billing_method if provided
   const validBillingMethods = ["days", "hours", "month"];
   const method = billing_method && validBillingMethods.includes(billing_method)
-    ? billing_method
-    : "days";
+      ? billing_method
+      : "days";
 
   try {
     const result = await pool.query(
       `INSERT INTO projects 
-       (name, client_id, emp_id, billing_amt, active, billing_method)
-       VALUES ($1, $2, $3, $4, $5, $6)
+       (name, client_id, emp_id, billing_amt, active, billing_method, overtime_amt)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
        RETURNING *`,
       [
         name,
@@ -29,6 +29,7 @@ export const createProject = async (req, res) => {
         billing_amt || 0,
         active !== undefined ? active : true,
         method,
+        overtime_amt || 0,
       ]
     );
 
@@ -125,7 +126,7 @@ export const getProjectById = async (req, res) => {
 // ✅ UPDATE project
 export const updateProject = async (req, res) => {
   const { id } = req.params;
-  const { name, client_id, emp_id, billing_amt, active, billing_method } = req.body;
+  const { name, client_id, emp_id, billing_amt, active, billing_method, overtime_amt } = req.body;
 
   if (!id || isNaN(id)) {
     return res.status(400).json({ message: "❌ Invalid project ID provided." });
@@ -142,9 +143,18 @@ export const updateProject = async (req, res) => {
   try {
     const result = await pool.query(
       `UPDATE projects 
-       SET name=$1, client_id=$2, emp_id=$3, billing_amt=$4, active=$5, billing_method=$6
-       WHERE id=$7 RETURNING *`,
-      [name, client_id, emp_id, billing_amt, active, billing_method || "days", id]
+       SET name=$1, client_id=$2, emp_id=$3, billing_amt=$4, active=$5, billing_method=$6, overtime_amt=$7
+       WHERE id=$8 RETURNING *`,
+      [
+        name,
+        client_id,
+        emp_id,
+        billing_amt || 0,
+        active !== undefined ? active : true,
+        billing_method || "days",
+        overtime_amt || 0,
+        id,
+      ]
     );
 
     if (result.rows.length === 0) {
