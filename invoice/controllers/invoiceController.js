@@ -14,19 +14,20 @@ export const createInvoice = async (req, res) => {
 
     // 🔹 Fetch related info via project → client → company → employee
     const projectData = await pool.query(
-      `SELECT 
-          p.id AS project_id,
-          c.id AS client_id,
-          c.company_id,
-          c.emp_id
-       FROM projects p
-       JOIN clients c ON p.client_id = c.id
-       WHERE p.id = $1`,
-      [project_id]
-    );
+  `SELECT 
+      p.id AS project_id,
+      c.id AS client_id,
+      c.company_id,
+      p.emp_id
+   FROM projects p
+   JOIN clients c ON p.client_id = c.id
+   WHERE p.id = $1`,
+  [project_id]
+);
+
 
     if (projectData.rows.length === 0) {
-      return res.status(404).json({ message: "❌ Project not found or client link missing." });
+      return res.status(404).json({ message: "❌ Project does not exist." });
     }
 
     const { client_id, company_id, emp_id } = projectData.rows[0];
