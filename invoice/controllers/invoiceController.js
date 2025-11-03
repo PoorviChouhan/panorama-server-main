@@ -14,16 +14,16 @@ export const createInvoice = async (req, res) => {
 
     // 🔹 Fetch related info via project → client → company → employee
     const projectData = await pool.query(
-  `SELECT 
-      p.id AS project_id,
-      c.id AS client_id,
-      c.company_id,
-      p.emp_id
-   FROM projects p
-   JOIN clients c ON p.client_id = c.id
-   WHERE p.id = $1`,
-  [project_id]
-);
+      `SELECT 
+          p.id AS project_id,
+          c.id AS client_id,
+          c.company_id,
+          p.emp_id
+       FROM projects p
+       JOIN clients c ON p.client_id = c.id
+       WHERE p.id = $1`,
+      [project_id]
+    );
 
 
     if (projectData.rows.length === 0) {
@@ -92,7 +92,7 @@ export const getAllInvoices = async (req, res) => {
        LEFT JOIN projects p ON i.project_id = p.id
        LEFT JOIN clients c ON p.client_id = c.id
        LEFT JOIN companies co ON c.company_id = co.id
-       LEFT JOIN employee e ON c.emp_id = e.id
+       LEFT JOIN employee e ON p.emp_id = e.id
        ORDER BY i.id DESC`
     );
 
