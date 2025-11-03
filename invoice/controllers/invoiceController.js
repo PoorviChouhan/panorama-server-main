@@ -32,7 +32,7 @@ export const createInvoice = async (req, res) => {
 
     const { client_id, company_id, emp_id } = projectData.rows[0];
 
-    // 🔹 Insert invoice using fetched relations
+    // 🔹 Insert invoice
     const result = await pool.query(
       `INSERT INTO invoices 
         (invoice_no, project_id, issue_date, total_amount, days, paid_leaves, unpaid_leaves, over_time)
